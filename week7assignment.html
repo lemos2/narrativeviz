@@ -1,0 +1,263 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<style> circle {fill: lightblue; stroke: black;} </style>
+<body onload='init()'>
+	<h3>Create a Narrative Visualization</h3>
+	<div style="width:300px;height:40px;">
+		<div style="float:left"><button onclick="prev()">Prev</button></div>
+		<div style="float:right;cursor:pointer;"><button onclick="next()">Next</button></div>
+	</div>
+	<div id="description"></div>
+	<svg id='svg1' width=300 height=300></svg>
+
+
+<script>
+var slide = 0;
+var total_slides = 3;
+var cars_data;
+
+async function init() {
+	const data = await d3.csv("https://flunky.github.io/cars2017.csv");
+	console.log("data ", data);
+	cars_data = data;
+
+	slide0();
+}
+
+function prev(){
+	console.log("Prev");
+	if(slide >= 1)
+		slide = slide-1;
+	console.log("slide ", slide);
+
+	if(slide == 0){
+		slide0();
+	}else if(slide == 1){
+		slide1();
+	}else if(slide == 2){
+		slide2();
+	}
+}
+
+function next(){
+	console.log("Next");
+	if(slide <= total_slides - 1)
+		slide = slide + 1;
+	console.log("slide ", slide);
+
+	if(slide == 0){
+		slide0();
+	}else if(slide == 1){
+		slide1();
+	}else if(slide == 2){
+		slide2();
+	}
+}
+
+function slide0(){
+	console.log("slide0 ");
+	// Clear svg
+	d3.selectAll("svg > *").remove();
+
+	var x = d3.scaleLog().domain([10,150]).range([0,200]).base(10);
+	var y = d3.scaleLog().domain([10,150]).range([200,0]).base(10);
+
+	var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+	var xAxis = d3.axisBottom(x)
+		.tickValues([10,20,50,100])
+		.scale(x)
+		.tickFormat(d3.format("~s"));
+	var yAxis = d3.axisLeft(y)
+		.tickValues([10,20,50,100])
+		.scale(y)
+		.tickFormat(d3.format("~s"));
+
+	d3.select("#svg1")
+		.append("g")
+		.attr("transform","translate(50,50)")
+		.selectAll("circle")
+		.data(cars_data).enter().append("circle")
+		.attr("cx", function(d,i){return x(d.AverageCityMPG);})
+		.attr("cy", function(d,i){return y(d.AverageHighwayMPG);})
+		.attr("r", function(d,i){ return 2 + parseInt(d.EngineCylinders); })
+		.on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div.html(d.AverageCityMPG + " city <br/>"  + d.AverageHighwayMPG + " highway <br/>" + d.EngineCylinders + " cylinders")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        });;
+
+	d3.select("#svg1")
+		.append("g").attr("transform", "translate(50,50)")
+		.call(yAxis);
+
+	d3.select("#svg1")
+		.append("g").attr("transform", "translate(50,250)")
+		.call(xAxis);
+
+	setAxisLabels("Avg City MPG", "Avg Highway MPG");
+}
+
+function slide1(){
+	// Clear svg
+	d3.selectAll("svg > *").remove();
+
+	var data2 = [4,8,15,16,23,42];
+	var crange = ["blue", "orange"];
+	var cdomain = [0,42];
+	var x2 = d3.scaleBand().domain([0,1,2,3,4,5]).range([0,200]);
+	var y2 = d3.scaleLinear().domain([0,42]).range([200,0]);
+	var cs = d3.scaleLinear().domain(cdomain).range(crange);
+	
+	var margin = 50;
+	var width = 300;
+	var height = 300;
+	d3.select("#svg1")
+		.attr("width",width)
+		.attr("height",height)
+		.append("g")
+		.attr("transform","translate(50,50)")
+		.selectAll('rect')
+		.data(data2)
+		.enter().append('rect')
+		.attr("x", function(d,i){return x2(i);})
+		.attr("y", function(d,i){return y2(d);})
+		.attr("width", x2.bandwidth())
+		.attr("height", function(d,i){return d*(300-100)/42;})
+		.style('fill',function(d,i) {return cs(d);});;
+
+	d3.select("#svg1")
+		.append("g").attr("transform", "translate(50,50)")
+		.call(d3.axisLeft(y2));
+
+	d3.select("#svg1")
+		.append("g").attr("transform", "translate(50,250)")
+		.call(d3.axisBottom(x2));
+
+	setAxisLabels("Nums", "Data");
+}
+
+function slide2(){
+	console.log("slide2");
+	var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+	div.transition()		
+        .duration(500)		
+        .style("opacity", 0);
+	// Clear svg
+	d3.selectAll("svg > *").remove();
+
+	var aggregates = d3.nest()
+		.key(function(d) { return d.Make; })
+		.rollup(function(v) { return {
+				count: v.length,
+				count_gasoline: d3.sum(v, function(d) { if(d.Fuel == 'Gasoline') return 1; }),
+				count_diesel: d3.sum(v, function(d) { if(d.Fuel == 'Diesel') return 1; }),
+				count_electric: d3.sum(v, function(d) { if(d.Fuel == 'Electricity') return 1; }),
+	    		max_avghighwaympg: d3.max(v, function(d) { return d.AverageHighwayMPG; }),
+	    		min_avghighwaympg: d3.min(v, function(d) { return d.AverageHighwayMPG; }),
+	    		max_avgcitympg: d3.max(v, function(d) { return d.AverageCityMPG; }),
+	    		min_avgcitympg: d3.min(v, function(d) { return d.AverageCityMPG; }),
+	    		avg_enginecylinders: d3.mean(v, function(d) { return d.EngineCylinders; }),
+	    		avg_avghighwaympg: d3.mean(v, function(d) { return d.AverageHighwayMPG; }),
+	    		avg_avgcitympg: d3.mean(v, function(d) { return d.AverageCityMPG; })
+    		};
+		})
+		.entries(cars_data);
+		console.log("Aggregates ", aggregates);
+
+	var x = d3.scaleLinear().domain([10,100]).range([0,200]);
+	var y = d3.scaleLinear().domain([10,100]).range([200,0]);
+
+	var xAxis = d3.axisBottom(x);
+		// .tickValues([10,20,30,50,100])
+		// .scale(x)
+		// .tickFormat(d3.format("~s"));
+	var yAxis = d3.axisLeft(y);
+		// .tickValues([10,20,30,50,100])
+		// .scale(y)
+		// .tickFormat(d3.format("~s"));
+
+	d3.select("#svg1")
+		.append("g")
+		.attr("transform","translate(50,50)")
+		.selectAll("circle")
+		.data(aggregates).enter().append("circle")
+		.attr("cx", function(d,i){
+			console.log(d.key, d.value.avg_avgcitympg, d.value.avg_avghighwaympg);
+			return x(d.value.avg_avgcitympg);
+		})
+		.attr("cy", function(d,i){
+			return y(d.value.avg_avghighwaympg);
+		})
+		.attr("r", function(d,i){
+			return 2 + parseInt(d.value.avg_enginecylinders);
+		})
+		.on("mouseover", function(d) {		
+            div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            div.html(
+            	"<b>Averages for " + d.key +
+            	"</b><br/>" +
+            	d.value.avg_avgcitympg +
+            	" city MPG <br/>"  +
+            	d.value.avg_avghighwaympg +
+            	" highway MPG <br/>" +
+            	d.value.avg_enginecylinders +
+            	" cylinders"
+            )
+                .style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY) + "px");	
+            })					
+        .on("mouseout", function(d) {		
+            div.transition()		
+                .duration(500)		
+                .style("opacity", 0);	
+        });;
+
+	d3.select("#svg1")
+		.append("g").attr("transform", "translate(50,50)")
+		.call(yAxis);
+
+	d3.select("#svg1")
+		.append("g").attr("transform", "translate(50,250)")
+		.call(xAxis);
+
+	setAxisLabels("Avg City MPG", "Avg Highway MPG");
+	var description = 'This chart compares city and highway mpg per car make.' +
+	'From this chart, it is noticeable that there is a correlation between number of cylinders '+
+	'and gas mileage.';
+	d3.select("#description").html(description);
+}
+
+function setAxisLabels(x,y){
+	d3.select("#svg1").append("text")             
+      .attr("transform",
+            "translate(" + (300/2) + " ," + 
+                           (290) + ")")
+      .style("text-anchor", "middle")
+      .text(x);
+
+	d3.select("#svg1").append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 10)
+      .attr("x",0 - (300 / 2))
+      .attr("dy", ".5em")
+      .style("text-anchor", "middle")
+      .text(y); 
+}
+</script>
+</body>
+</html>
