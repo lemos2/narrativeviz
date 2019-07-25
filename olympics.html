@@ -20,8 +20,8 @@ async function init() {
 	const data = await d3.csv("https://flunky.github.io/cars2017.csv");
 	// console.log("data ", data);
 
-	// const olympics_data = await d3.csv("athlete_events.csv");
-	// console.log("olympics_data ", olympics_data);
+	const olympics_data = await d3.csv("athlete_events.csv");
+	console.log("olympics_data ", olympics_data);
 	cars_data = data;
 
 	slide0();
