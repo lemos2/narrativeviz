@@ -1,0 +1,32 @@
+Rachael Lemos
+CS 498 Data Visualization
+
+Create a Narrative Visualization
+
+Messaging
+With my visualization, I am trying to communicate information about the medal winning athletes of recent summer Olympics. My goal is to provide several areas for a user to explore and learn about the medal winning athletes from different countries, starting with medal counts and going into more detail with medals split by sport and age of athletes.
+
+Narrative structure
+My narrative visualization is designed to follow the interactive slideshow method. On each slide, the user is able to interact with the data by changing the country selected and hovering over the chart to see tooltips about the data displayed. The user can move from slide to slide, drill into details, and interact with the data on each slide. 
+
+Visual structure
+There are several elements that appear at the same place on each slide. These elements are the navigation (‘prev’ and ‘next’ buttons), country selection dropdown, and chart legend. Each slide has navigation shown at the top. The prev button is disabled when you are on the first slide and the next button is disabled on the last slide. When the buttons are clickable, they appear raised to indicate that they can be clicked. The dropdown to change the country selected appears at the top of the chart on each slide. The legend for each chart is always shown on the right side of the chart.
+Another thing to note is that the x axis displays years for all three slides. Keeping the same x axis from slide to slide can help make the transition from slide to slide less confusing and ease with user understanding.
+
+Scenes
+The first scene is the least complicated and they get more complicated as you move forward. All scenes use the same data but display different parts of it (type of medal and years, medals by sport and years, and age and years).
+The first scene simply shows the medal counts for a selected country across a range of years. Hovering over each part of the stacked bar chart reveals a tooltip with the count of the medal and the year. 
+The second scene displays another stacked bar chart, with the same data but split by sport instead of medal type. Hovering over the second chart shows information about the number of medals won in the selected sport and the year. Bar charts work well to show discrete/nominal data (years) with quantitative discrete data (number of medals/number of medals by sport).
+The third and last scene changes chart type from stacked bar chart to scatter plot. This chart shows age of the medal winning athletes by year. Color is used to indicate the number of athletes at each age. The darker the color, the more athletes of that age that won a medal.
+
+Annotations
+A short description of the chart appears above each chart, as well as an observation about the data using the USA as an example.  When the country selected changes from the dropdown, the annotation updates as well. The observation about the USA data only appears when USA is the selected country. The title at the top also changes to reflect the country selected.
+
+Parameters
+The parameters that can be changed by the user include the slide number (3 slides in total) and the country selected (USA is set by default). Slide 0 is the first slide, which shows a stacked bar chart of the type of medal by year. The next slide, slide 1, shows a stacked bar chart of medals by sport by year. The third slide, slide 2, shows a scatter plot of the age of medal winning athletes by year.
+Clicking the ‘prev’ or ‘next’ buttons updates the slide number and transitions to display the selected chart. The country selection dropdown is a global parameter and can be changed on any slide. Once the country is changed, that country is now used as the selection when the slide is changed.
+
+Triggers
+The ‘next’ and ‘prev’ buttons are raised to indicate that they can be clicked. Each one is disabled separately when there are no next or previous slides. The buttons are used to move the user throughout the visualization. The user can choose to go forward to the next slide or back to a previous slide at any point.
+The ‘Select Country’ dropdown has an arrow on the right side to indicate that it can be clicked to reveal more options. When a country is selected, that country is used throughout the visualization until a new country is selected. A change in the country selected causes the subtitle and the annotation to change to the new country name.
+Each chart also has tooltips available. For the first two charts, the bars are large and a tooltip will appear when hovering over any section of the bar. Since it is possible that the user does not move their mouse over the chart, there is a small message at the top of each page to tell the user that tooltips are available.
