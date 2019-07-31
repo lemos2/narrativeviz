@@ -153,7 +153,7 @@ function medalCountsByAge(){
 	  keys.forEach(function(key) { // for each key
 	    result[key] = d3.sum(v, function(d){if(d.Age == key && (d.Medal == 'Gold' || d.Medal == 'Silver' || d.Medal == 'Bronze')) return 1; });
 	    total += result[key];
-	    result2.push({'age': key, 'total': result[key], 'year': d.Year})
+	    result2.push({'age': key, 'total': result[key]})
 	  });
 	  result['total'] = total;
 
@@ -311,8 +311,9 @@ function medalCountsByAge(){
 
 	setAxisLabels("Years", "Age");
 
-	var description = 'We can compare the ages of medal winning athletes from '+ country+' across 7 Summer Olympics.' +
-	'';
+	var description = 'Compare the ages of medal winning athletes from '+ country+' across recent Summer Olympics.<br/>';
+	if(country == 'USA')
+		description += 'The USA had athletes as young as 14 in the years 1992 and 1996 and as old as 52 in 2016 Olympics.';
 	d3.select("#description").html(description);
 }
 
@@ -355,7 +356,7 @@ function medalsBarChart(){
     .attr("class", "tooltip")
     .style("opacity", 0);
 
-	var data = d3.nest()
+	var data1 = d3.nest()
 	.key(function(d) { return d.Year; })
 	.rollup(function(v) { return {
 			Gold: d3.sum(v, function(d) { if(d.Medal == 'Gold') return 1; }),
@@ -366,12 +367,39 @@ function medalsBarChart(){
 	})
 	.entries(country_data);
 
-	for(d in data){
-		data[d]['Gold'] = data[d].value['Gold'];
-		data[d]['Silver'] = data[d].value['Silver'];
-		data[d]['Bronze'] = data[d].value['Bronze'];
-		data[d]['total'] = data[d].value['total'];
-		data[d]['Year'] = data[d].key;
+	let data = [];
+	let a = 0;
+	let next_year = null;
+	for(yr in years){
+		if(data1.length ==0){
+			next_year = {
+				'Gold': 0,
+				'Silver': 0,
+				'Bronze': 0,
+				'total': 0,
+				'Year': years[yr]
+			};
+		}else{
+			if(data1[a].key == years[yr]){
+				next_year = {
+					'Gold': data1[a].value['Gold'],
+					'Silver': data1[a].value['Silver'],
+					'Bronze': data1[a].value['Bronze'],
+					'total': data1[a].value['total'],
+					'Year': data1[a].key
+				}
+				a = a+1;
+			}else{
+				next_year = {
+					'Gold': 0,
+					'Silver': 0,
+					'Bronze': 0,
+					'total': 0,
+					'Year': years[yr]
+				};
+			}
+		}
+		data.push(next_year);
 	}
 
 	y.domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]).nice();
@@ -468,7 +496,9 @@ function medalsBarChart(){
       	.text(function(d) { return d; });
 
 	setAxisLabels("Years", country+" Medal Counts");
-	var description = 'Explore '+country +' medal counts across 7 Summer Olympics.';
+	var description = 'Explore '+country +' medal counts across several recent Summer Olympics.<br/>';
+	if(country == 'USA')
+		description += 'One thing of note is that the USA has had more gold medals than silver or bronze in each of the last 7 Summer Olympics.';
 	d3.select("#description").html(description);
 }
 
@@ -517,24 +547,48 @@ function medalsBarChartBySport(){
     .attr("class", "tooltip")
     .style("opacity", 0);
 
-	var data = d3.nest().key(function(d){ return d.Year; }).rollup(function(v){
-  	var result = {};
-  		var total = 0
-	  keys.forEach(function(key) { // for each key
-	    result[key] = d3.sum(v, function(d){ if(d.Sport == key && (d.Medal == 'Gold' || d.Medal == 'Silver' || d.Medal == 'Bronze')) return 1; });
-	    total += result[key];
-	  });
-	  result['total'] = total;
+	var data1 = d3.nest().key(function(d){ return d.Year; }).rollup(function(v){
+		var result = {};
+		var total = 0
+		keys.forEach(function(key) { // for each key
+			result[key] = d3.sum(v, function(d){ if(d.Sport == key && (d.Medal == 'Gold' || d.Medal == 'Silver' || d.Medal == 'Bronze')) return 1; });
+			total += result[key];
+		});
+		result['total'] = total;
 
-	  return result;
+		return result;
 	}).entries(country_data);
 
-	for(d in data){
-		for( k in keys){
-			data[d][keys[k]] = data[d].value[keys[k]];
+	var data = [];
+	var a = 0;
+	var next_year = null;
+	for(yr in years){
+		if(data1.length == 0){
+			next_year = {};
+			for( k in keys){
+				next_year[keys[k]] = 0;
+			}
+			next_year['Year'] = years[yr];
+			next_year['total'] = 0;
+		}else{
+			if(data1[a].key == years[yr]){
+				next_year = {};
+				for( k in keys){
+					next_year[keys[k]] = data1[a].value[keys[k]];
+				}
+				next_year['Year'] = years[yr];
+				next_year['total'] = data1[a].value.total;
+				a = a+1;
+			}else{
+				next_year = {};
+				for( k in keys){
+					next_year[keys[k]] = 0;
+				}
+				next_year['Year'] = years[yr];
+				next_year['total'] = 0;
+			}
 		}
-		data[d]['Year'] = data[d].key;
-		data[d]['total'] = data[d].value.total;
+		data.push(next_year);
 	}
 
 	y.domain([0, d3.max(data, d => d3.sum(keys, k => +d[k]))]).nice();
@@ -633,7 +687,9 @@ function medalsBarChartBySport(){
       .text(function(d) { return d; });
 
 	setAxisLabels("Years", country+" Medal Counts");
-	var description = 'Now, compare '+country +' medal counts by sport across 7 Summer Olympics.';
+	var description = 'Now, compare '+country +' medal counts by sport across several recent Summer Olympics. <br/>';
+	if(country == 'USA')
+		description += 'Looking at the USA data, it is clear that the USA team has been dominant in swimming throughout the years, ranging from 56-71 medals in that sport each year.';
 	d3.select("#description").html(description);
 }
 
